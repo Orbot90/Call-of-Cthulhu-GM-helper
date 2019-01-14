@@ -1,6 +1,10 @@
 package ru.orbot90.com.coc.gmhelper.core.test
 
 import ru.orbot90.com.coc.gmhelper.core.dice.DiceRoller
+import ru.orbot90.com.coc.gmhelper.core.model.OpposedTestResult
+import ru.orbot90.com.coc.gmhelper.core.model.OpposedTestResultType
+import ru.orbot90.com.coc.gmhelper.core.model.TestRequest
+import java.lang.RuntimeException
 
 class SkillTestPerformerImpl constructor(private val diceRoller: DiceRoller) : SkillTestPerformer {
 
@@ -22,6 +26,23 @@ class SkillTestPerformerImpl constructor(private val diceRoller: DiceRoller) : S
             rollResult <= skillValue -> TestResultType.SUCCESS
             else -> TestResultType.FAILURE
         }
+    }
+
+    override fun performOpposedTest(firstCharacterTest: TestRequest, secondCharacterTest: TestRequest): OpposedTestResult {
+        val firstResult = this.performSkillTest(firstCharacterTest.skillValue, firstCharacterTest.bonusDice, firstCharacterTest.penaltyDice)
+        val secondResult = this.performSkillTest(secondCharacterTest.skillValue, secondCharacterTest.bonusDice, secondCharacterTest.penaltyDice)
+        val opposedTestResultType: OpposedTestResultType = when {
+            firstResult in hashSetOf(TestResultType.FUMBLE, TestResultType.FAILURE) &&
+                    secondResult in hashSetOf(TestResultType.FUMBLE, TestResultType.FAILURE) ->
+                OpposedTestResultType.BOTH_FAIL
+            firstResult == secondResult -> OpposedTestResultType.TIE
+            firstResult > secondResult -> OpposedTestResultType.FIRST_WIN
+            secondResult > firstResult -> OpposedTestResultType.SECOND_WIN
+            else -> {
+                throw RuntimeException("Failed comparing test results")
+            }
+        }
+        return OpposedTestResult(opposedTestResultType, firstResult, secondResult)
     }
 
     private fun rollWithPenaltyDice(penaltyDiceCount: Int): Int {

@@ -5,14 +5,16 @@ import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.post
-import ru.orbot90.com.coc.gmhelper.core.model.TestRequest
-import ru.orbot90.com.coc.gmhelper.core.test.SkillTestPerformer
+import io.ktor.routing.route
+import ru.orbot90.com.coc.gmhelper.core.dice.DiceRoller
+import ru.orbot90.com.coc.gmhelper.core.model.RollRequest
 
-fun Route.performTestController(skillTestPerformer: SkillTestPerformer){
-    post("/performtest"){
-        val request = call.receive<TestRequest>()
-        val testResult = skillTestPerformer.performSkillTest(request.skillValue, request.bonusDice,
-                request.penaltyDice).name
-        call.respond("{\"testResult\": \"$testResult\"}")
+
+fun Route.diceRollController(diceRoller: DiceRoller){
+    route("/diceroll"){
+        post("/"){
+            val request = call.receive<RollRequest>()
+            call.respond(diceRoller.rollDice(request.diceCount,request.diceFacesCount))
+        }
     }
 }
